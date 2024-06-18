@@ -1,0 +1,32 @@
+[
+    {
+        "id": 1,
+        "nombre": "Fiorella",
+        "clave": "2020",
+        "perfil": "mozo"
+    },
+    {
+        "id": 2,
+        "nombre": "Santi",
+        "clave": "1234",
+        "perfil": "bartender"
+    },
+    {
+        "id": 3,
+        "nombre": "Bere",
+        "clave": "1212",
+        "perfil": "mozo"
+    },
+    {
+        "id": 4,
+        "nombre": "LALA",
+        "clave": "1212",
+        "perfil": "mozo"
+    },
+    {
+        "id": 4,
+        "nombre": "Jose",
+        "clave": "1212",
+        "perfil": "mozo"
+    }
+]
