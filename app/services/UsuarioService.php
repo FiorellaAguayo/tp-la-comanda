@@ -10,13 +10,12 @@ use \PDO;
 class UsuarioService {
     private $db;
 
-    public function __construct(){
+    public function __construct() {
         $this->db = Database::getInstance();
     }
 
     public function crearUsuario($nombreUsuario, $clave, $nombreEmpleado, $rol, $estadoEmpleado){
         try {
-            // Crear empleado
             $sqlEmpleado = "INSERT INTO empleados (nombre_empleado, rol, estado) VALUES (:nombreEmpleado, :rol, :estado)";
             $stmtEmpleado = $this->db->prepare($sqlEmpleado);
             $stmtEmpleado->bindParam(":nombreEmpleado", $nombreEmpleado);
@@ -27,7 +26,6 @@ class UsuarioService {
 
             $empleado = new Empleado($empleadoId, $nombreEmpleado, $rol, $estadoEmpleado);
 
-            // Crear usuario
             $sqlUsuario = "INSERT INTO usuarios (nombre_usuario, clave, empleado_id) VALUES (:nombreUsuario, :clave, :empleadoId)";
             $stmtUsuario = $this->db->prepare($sqlUsuario);
             $stmtUsuario->bindParam(":nombreUsuario", $nombreUsuario);
