@@ -23,7 +23,7 @@ class AuthMiddleware {
 
         if ($rol === 'socio') {
             return $handler->handle($request);
-        } elseif ($rol === 'empleado') {
+        } else if ($rol === 'empleado') {
             $response = new ResponseClass();
             $response->getBody()->write(json_encode(["error" => "Acceso restringido, solo socios"]));
             return $response->withStatus(403);

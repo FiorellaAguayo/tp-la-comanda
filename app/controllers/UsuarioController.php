@@ -4,6 +4,7 @@ namespace App\Controllers;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Services\UsuarioService;
+use App\Models\Usuario;
 
 class UsuarioController {
     private $usuarioService;
@@ -14,17 +15,17 @@ class UsuarioController {
 
     public function listarUsuarios(Request $request, Response $response){
         try {
-            $usuarios = $this->usuarioService->obtenerUsuarios();
+            $usuarios = $this->usuarioService->obtenerListaUsuarios();
             $usuariosArray = array_map(function($usuario) {
                 return [
-                    'id' => $usuario->getId(),
-                    'nombreUsuario' => $usuario->getNombreUsuario(),
-                    'empleado' => [
-                        'id' => $usuario->getEmpleado()->getId(),
-                        'nombreEmpleado' => $usuario->getEmpleado()->getNombreEmpleado(),
-                        'rol' => $usuario->getEmpleado()->getRol(),
-                        'estado' => $usuario->getEmpleado()->getEstado(),
-                    ],
+                    'id' => $usuario->getIdUsuario(),
+                    'nombre' => $usuario->getNombre(),
+                    'email' => $usuario->getEmail(),
+                    'clave' => $usuario->getClave(),
+                    'rol' => $usuario->getRol(),
+                    'tiempo_estimado' => $usuario->getTiempoEstimado(),
+                    'fecha_ingreso' => $usuario->getFechaIngreso(),
+                    'estado' => $usuario->getEstado(),
                 ];
             }, $usuarios);
             $response->getBody()->write(json_encode(['success' => true, 'message' => 'Envio de lista de usuarios exitosa', 'data' => $usuariosArray]));
@@ -37,40 +38,136 @@ class UsuarioController {
         }
     }
 
-    public function agregarUsuario(Request $request, Response $response){
+    public function agregarUsuario(Request $request, Response $response) {
         try {
-            $json = $request->getBody()->getContents();
-            $data = json_decode($json, true);
-
-            $nombreUsuario = $data['nombreUsuario'] ?? null;
+            $data = $request->getParsedBody();
+            $nombre = $data['nombre'] ?? null;
+            $email = $data['email'] ?? null;
             $clave = $data['clave'] ?? null;
-            $nombreEmpleado = $data['nombreEmpleado'] ?? null;
             $rol = $data['rol'] ?? null;
-            $estadoEmpleado = $data['estadoEmpleado'] ?? null;
+            $tiempo_estimado = $data['tiempo_estimado'] ?? null;
+            $fecha_ingreso = $data['fecha_ingreso'] ?? null;
+            $estado = $data['estado'] ?? null;
+            
+            if ($nombre !== null && $email !== null && $clave !== null && $rol !== null && $tiempo_estimado !== null && $fecha_ingreso !== null && $estado !== null) {
+                $usuarioExistente = $this->usuarioService->obtenerUsuarioPorEmail($email);
 
-            if ($nombreUsuario && $clave && $nombreEmpleado && $rol && $estadoEmpleado) {
-                $usuario = $this->usuarioService->crearUsuario($nombreUsuario, $clave, $nombreEmpleado, $rol, $estadoEmpleado);
+                if ($usuarioExistente) {
+                    $payload = json_encode(array("message" => "El usuario ya existe"));
 
-                $response->getBody()->write(json_encode([
-                    'success' => true,
-                    'message' => 'Usuario creado exitosamente',
-                    'data' => [
-                        'id' => $usuario->getId(),
-                        'nombreUsuario' => $usuario->getNombreUsuario(),
-                        'empleado' => [
-                            'id' => $usuario->getEmpleado()->getId(),
-                            'nombreEmpleado' => $usuario->getEmpleado()->getNombreEmpleado(),
-                            'rol' => $usuario->getEmpleado()->getRol(),
-                            'estado' => $usuario->getEmpleado()->getEstado(),
+                } else {
+                    $usuario = $this->usuarioService->crearUsuario($nombre, $email, $clave, $rol, $tiempo_estimado, $fecha_ingreso, $estado);
+                    $payload = json_encode([
+                        'success' => true,
+                        'message' => 'Usuario creado exitosamente',
+                        'data' => [
+                            'id' => $usuario->getIdUsuario(),
+                            'nombre' => $usuario->getNombre(),
+                            'email' => $usuario->getEmail(),
+                            'clave' => $usuario->getClave(),
+                            'rol' => $usuario->getRol(),
+                            'tiempo_estimado' => $usuario->getTiempoEstimado(),
+                            'fecha_ingreso' => $usuario->getFechaIngreso(),
+                            'estado' => $usuario->getEstado(),
                         ],
-                    ],
-                ]));
-                return $response->withHeader('Content-Type', 'application/json')
-                                ->withStatus(201);
+                    ]);
+                }
+
+                $response->getBody()->write($payload);
+                return $response->withHeader('Content-Type', 'application/json');
             } else {
-                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Datos incompletos']));
-                return $response->withHeader('Content-Type', 'application/json')
-                                ->withStatus(400);
+
+                $payload = json_encode(['success' => false, 'message' => 'Datos incompletos']);
+                $response->getBody()->write($payload);
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+
+        } catch(\Exception $e){
+            $response->getBody()->write(json_encode(['success' => false, 'message' => $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
+    }
+
+    public function modificarUsuario(Request $request, Response $response) {
+        try {
+            $data = $request->getParsedBody();
+            $email = $data['email'] ?? null;
+
+            if ($email !== null) {
+                $usuarioExistente = $this->usuarioService->obtenerUsuarioPorEmail($email);
+
+                if ($usuarioExistente) {
+                    $nombre = $data['nombre'] ?? $usuarioExistente->getNombre();
+                    $clave = $data['clave'] ?? $usuarioExistente->getClave();
+                    $rol = $data['rol'] ?? $usuarioExistente->getRol();
+                    $tiempo_estimado = $data['tiempo_estimado'] ?? $usuarioExistente->getTiempoEstimado();
+                    $fecha_ingreso = $data['fecha_ingreso'] ?? $usuarioExistente->getFechaIngreso();
+                    $estado = $data['estado'] ?? $usuarioExistente->getEstado();
+
+                    $usuarioModificado = $this->usuarioService->modificarUsuario(
+                        $usuarioExistente->getIdUsuario(),
+                        $nombre,
+                        $email,
+                        $clave,
+                        $rol,
+                        $tiempo_estimado,
+                        $fecha_ingreso,
+                        $estado
+                    );
+                    $payload = json_encode([
+                        'success' => true,
+                        'message' => 'Usuario modificado exitosamente',
+                        'data' => [
+                            'id' => $usuarioModificado->getIdUsuario(),
+                            'nombre' => $usuarioModificado->getNombre(),
+                            'email' => $usuarioModificado->getEmail(),
+                            'clave' => $usuarioModificado->getClave(),
+                            'rol' => $usuarioModificado->getRol(),
+                            'tiempo_estimado' => $usuarioModificado->getTiempoEstimado(),
+                            'fecha_ingreso' => $usuarioModificado->getFechaIngreso(),
+                            'estado' => $usuarioModificado->getEstado(),
+                        ],
+                    ]);
+                } else {
+                    $payload = json_encode(["message" => "El usuario no existe"]);
+                }
+
+                $response->getBody()->write($payload);
+                return $response->withHeader('Content-Type', 'application/json');
+            } else {
+                $payload = json_encode(['success' => false, 'message' => 'Email no proporcionado']);
+                $response->getBody()->write($payload);
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+
+        } catch(\Exception $e){
+            $response->getBody()->write(json_encode(['success' => false, 'message' => $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
+    }
+
+    public function eliminarUsuario(Request $request, Response $response) {
+        try {
+            $data = $request->getParsedBody();
+            $email = $data['email'] ?? null;
+
+            if ($email !== null) {
+                $usuarioExistente = $this->usuarioService->obtenerUsuarioPorEmail($email);
+
+                if ($usuarioExistente) {
+                    $this->usuarioService->eliminarUsuario($usuarioExistente->getIdUsuario());
+                    $payload = json_encode(['success' => true, 'message' => 'Usuario eliminado exitosamente']);
+                } else {
+                    $payload = json_encode(['success' => false, 'message' => 'Usuario no encontrado']);
+                }
+
+                $response->getBody()->write($payload);
+                return $response->withHeader('Content-Type', 'application/json');
+
+            } else {
+                $payload = json_encode(['success' => false, 'message' => 'Email no proporcionado']);
+                $response->getBody()->write($payload);
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
             }
 
         } catch(\Exception $e){

@@ -8,26 +8,26 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\Psr7\Response as ResponseClass;
 
 class ValidationMiddleware {
-    private $rules;
+    private $campos;
 
-    public function __construct(array $rules) {
-        $this->rules = $rules;
+    public function __construct(array $campos) {
+        $this->campos = $campos;
     }
 
     public function __invoke(Request $request, RequestHandler $handler): Response {
         $json = $request->getBody()->getContents();
         $data = json_decode($json, true);
-        $errors = [];
+        $errores = [];
 
-        foreach ($this->rules as $field => $required) {
-            if ($required && empty($data[$field])) {
-                $errors[$field] = 'Este campo es requerido';
+        foreach ($this->campos as $campo => $required) {
+            if ($required && empty($data[$campo])) {
+                $errors[$campo] = 'Este campo es requerido';
             }
         }
 
-        if (!empty($errors)) {
+        if (!empty($errores)) {
             $response = new ResponseClass();
-            $response->getBody()->write(json_encode(['errors' => $errors]));
+            $response->getBody()->write(json_encode(['errors' => $errores]));
             return $response->withStatus(400);
         }
 

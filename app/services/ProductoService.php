@@ -13,54 +13,73 @@ class ProductoService {
         $this->db = Database::getInstance();
     }
 
-    public function crearProducto($nombre, $categoria, $precio){
-        try {
-            // Crear producto
-            $sqlProducto = "INSERT INTO productos (nombre, categoria, precio) VALUES (:nombre, :categoria, :precio)";
-            $stmtProducto = $this->db->prepare($sqlProducto);
-            $stmtProducto->bindParam(":nombre", $nombre);
-            $stmtProducto->bindParam(":categoria", $categoria);
-            $stmtProducto->bindParam(":precio", $precio);
-            $stmtProducto->execute();
-            $productoId = $this->db->lastInsertId();
+    public function crearProducto($nombre, $categoria, $sector, $precio) {
+        $sql = "INSERT INTO productos (nombre, categoria, sector, precio) VALUES (:nombre, :categoria, :sector, :precio)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(":nombre", $nombre);
+        $stmt->bindParam(":categoria", $categoria);
+        $stmt->bindParam(":sector", $sector);
+        $stmt->bindParam(":precio", $precio);
+        $stmt->execute();
 
-            return new Producto($productoId, $nombre, $categoria, $precio);
-        } catch(PDOException $e){
-            throw new PDOException($e->getMessage());
-        }
+        return new Producto($nombre, $categoria, $sector, $precio);
     }
 
-    public function obtenerProductos(){
+    public function obtenerProductoPorNombre($nombre) {
         try {
-            $sql = "SELECT * FROM productos";
+            $sql = "SELECT * FROM productos WHERE nombre = :nombre";
             $stmt = $this->db->prepare($sql);
-            $stmt->execute();
-            $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            $resultado = [];
-            foreach ($productos as $producto) {
-                $resultado[] = new Producto($producto['id'], $producto['nombre'], $producto['categoria'], $producto['precio']);
-            }
-
-            return $resultado;
-        } catch(PDOException $e){
-            throw new PDOException($e->getMessage());
-        }
-    }
-
-    private function obtenerProductoPorId($productoId) {
-        try {
-            $sql = "SELECT * FROM empleados WHERE id = :id";
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':id', $productoId);
+            $stmt->bindParam(':nombre', $nombre);
             $stmt->execute();
             $producto = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($producto) {
-                return new Producto($producto['id'], $producto['nombre'], $producto['categoria'], $producto['precio']);
+                return new Producto($producto['nombre'], $producto['categoria'], $producto['sector'], $producto['precio']);
             }
             return null;
         } catch (PDOException $e) {
             throw new PDOException($e->getMessage());
         }
     }
+
+    public function obtenerListaProductos() {
+        try {
+            $sql = "SELECT * FROM productos";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $listaRetorno = [];
+            foreach ($productos as $producto) {
+                $productoInstance = new Producto($producto['nombre'], $producto['categoria'], $producto['sector'], $producto['precio']);
+                array_push($listaRetorno, $productoInstance);
+            }
+            return $listaRetorno;
+        } catch(PDOException $e){
+            throw new PDOException($e->getMessage());
+        }
+    }
+
+    public function modificarProducto($nombre, $categoria, $sector, $precio) {
+        $sql = "UPDATE productos SET ";
+        $fields = [];
+        if (!is_null($categoria)) $fields[] = "categoria = :categoria";
+        if (!is_null($sector)) $fields[] = "sector = :sector";
+        if (!is_null($precio)) $fields[] = "precio = :precio";
+        $sql .= implode(", ", $fields);
+        $sql .= " WHERE nombre = :nombre";
+    
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':nombre', $nombre);
+        if (!is_null($categoria)) $stmt->bindParam(':categoria', $categoria);
+        if (!is_null($sector)) $stmt->bindParam(':sector', $sector);
+        if (!is_null($precio)) $stmt->bindParam(':precio', $precio);
+        $stmt->execute();
+        return new Producto($nombre, $categoria, $sector, $precio);
+    }
+
+    public function eliminarProducto($nombre) {
+        $sql = "DELETE FROM productos WHERE nombre = :nombre";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':nombre', $nombre);
+        $stmt->execute();
+    }    
 }

@@ -4,6 +4,7 @@ namespace App\Controllers;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Services\ProductoService;
+use App\Models\Producto;
 
 class ProductoController {
     private $productoService;
@@ -14,12 +15,12 @@ class ProductoController {
 
     public function listarProductos(Request $request, Response $response){
         try {
-            $productos = $this->productoService->obtenerProductos();
+            $productos = $this->productoService->obtenerListaProductos();
             $productosArray = array_map(function($producto) {
                 return [
-                    'id' => $producto->getId(),
                     'nombre' => $producto->getNombre(),
                     'categoria' => $producto->getCategoria(),
+                    'sector' => $producto->getSector(),
                     'precio' => $producto->getPrecio(),
                 ];
             }, $productos);
@@ -35,32 +36,108 @@ class ProductoController {
 
     public function agregarProducto(Request $request, Response $response){
         try {
-            $json = $request->getBody()->getContents();
-            $data = json_decode($json, true);
-
+            $data = $request->getParsedBody();
             $nombre = $data['nombre'] ?? null;
             $categoria = $data['categoria'] ?? null;
+            $sector = $data['sector'] ?? null;
             $precio = $data['precio'] ?? null;
 
-            if($nombre && $categoria && $precio){
-                $producto = $this->productoService->crearProducto($nombre, $categoria, $precio);
-
-                $response->getBody()->write(json_encode([
-                    'success' => true,
-                    'message' => 'Producto creado exitosamente',
-                    'data' => [
-                        'id' => $producto->getId(),
-                        'nombre' => $producto->getNombre(),
-                        'categoria' => $producto->getCategoria(),
-                        'precio' => $producto->getPrecio(),
-                    ],
-                ]));
-                return $response->withHeader('Content-Type', 'application/json')
-                                ->withStatus(201);
+            if($nombre !== null && $categoria !== null && $sector !== null && $precio !== null) {
+                $productoExistente = $this->productoService->obtenerProductoPorNombre($nombre);
+                if ($productoExistente) {
+                    $payload = json_encode(array("message" => "El producto ya existe"));
+                } else {
+                    $producto = $this->productoService->crearProducto($nombre, $categoria, $sector, $precio);
+                    $payload = json_encode([
+                        'success' => true,
+                        'message' => 'Producto creado exitosamente',
+                        'data' => [
+                            'nombre' => $producto->getNombre(),
+                            'categoria' => $producto->getCategoria(),
+                            'sector' => $producto->getSector(),
+                            'precio' => $producto->getPrecio(),
+                        ],
+                    ]);
+                }
+                $response->getBody()->write($payload);
+                return $response->withHeader('Content-Type', 'application/json');
             } else {
-                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Datos incompletos']));
-                return $response->withHeader('Content-Type', 'application/json')
-                                ->withStatus(400);
+                $payload = json_encode(['success' => false, 'message' => 'Datos incompletos']);
+                $response->getBody()->write($payload);
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+        } catch(\Exception $e){
+            $response->getBody()->write(json_encode(['success' => false, 'message' => $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
+    }
+
+    public function modificarProducto(Request $request, Response $response) {
+        try {
+            $data = $request->getParsedBody();
+            $nombre = $data['nombre'] ?? null;
+
+            if ($nombre !== null) {
+                $productoExistente = $this->productoService->obtenerProductoPorNombre($nombre);
+
+                if ($productoExistente) {
+                    $nombre = $data['nombre'] ?? $productoExistente->getNombre();
+                    $categoria = $data['categoria'] ?? $productoExistente->getCategoria();
+                    $sector = $data['sector'] ?? $productoExistente->getSector();
+                    $precio = $data['precio'] ?? $productoExistente->getPrecio();
+
+                    $productoModificado = $this->productoService->modificarProducto($nombre, $categoria, $sector, $precio);
+                    
+                    $payload = json_encode([
+                        'success' => true,
+                        'message' => 'Producto modificado exitosamente',
+                        'data' => [
+                            'nombre' => $productoModificado->getNombre(),
+                            'categoria' => $productoModificado->getCategoria(),
+                            'sector' => $productoModificado->getSector(),
+                            'precio' => $productoModificado->getPrecio(),
+                        ],
+                    ]);
+                } else {
+                    $payload = json_encode(["message" => "El producto no existe"]);
+                }
+
+                $response->getBody()->write($payload);
+                return $response->withHeader('Content-Type', 'application/json');
+            } else {
+                $payload = json_encode(['success' => false, 'message' => 'Nombre no proporcionado']);
+                $response->getBody()->write($payload);
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+
+        } catch(\Exception $e){
+            $response->getBody()->write(json_encode(['success' => false, 'message' => $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
+    }
+
+    public function eliminarProducto(Request $request, Response $response) {
+        try {
+            $data = $request->getParsedBody();
+            $nombre = $data['nombre'] ?? null;
+
+            if ($nombre !== null) {
+                $productoExistente = $this->productoService->obtenerProductoPorNombre($nombre);
+
+                if ($productoExistente) {
+                    $this->productoService->eliminarProducto($nombre);
+                    $payload = json_encode(['success' => true, 'message' => 'Producto eliminado exitosamente']);
+                } else {
+                    $payload = json_encode(['success' => false, 'message' => 'Producto no encontrado']);
+                }
+
+                $response->getBody()->write($payload);
+                return $response->withHeader('Content-Type', 'application/json');
+
+            } else {
+                $payload = json_encode(['success' => false, 'message' => 'Nombre no proporcionado']);
+                $response->getBody()->write($payload);
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
             }
 
         } catch(\Exception $e){

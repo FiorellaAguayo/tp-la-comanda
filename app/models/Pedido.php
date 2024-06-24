@@ -1,25 +1,21 @@
 <?php
-
 namespace App\Models;
-//use Illuminate\Database\Eloquent\Model;
 
 class Pedido{
     public $id;
-    public $codigoUnico;
-    public $idCliente;
-    public $idMesa;
+    public $nombre_cliente;
+    public $id_mesa;
     public $estado;
-    public $tiempoEstimado;
-    public $productos; // Array de productos en el pedido
+    public $tiempo_estimado;
+    public $nombre_productos; // Array de productos en el pedido
 
-    public function __construct($id, $codigoUnico, $idCliente, $idMesa, $estado, $tiempoEstimado, $productos) {
+    public function __construct($id, $nombre_cliente, $id_mesa, $estado, $tiempo_estimado, $nombre_productos) {
         $this->id = $id;
-        $this->codigoUnico = $codigoUnico;
-        $this->idCliente = $idCliente;
-        $this->idMesa = $idMesa;
+        $this->nombre_cliente = $nombre_cliente;
+        $this->id_mesa = $id_mesa;
         $this->estado = $estado;
-        $this->tiempoEstimado = $tiempoEstimado;
-        $this->productos = $productos;
+        $this->tiempo_estimado = $tiempo_estimado;
+        $this->nombre_productos = $nombre_productos;
     }
 
     public function getId()
@@ -27,19 +23,14 @@ class Pedido{
         return $this->id;
     }
 
-    public function getCodigoUnico()
+    public function getNombreCliente()
     {
-        return $this->codigoUnico;
-    }
-
-    public function getIdCliente()
-    {
-        return $this->idCliente;
+        return $this->nombre_cliente;
     }
 
     public function getIdMesa()
     {
-        return $this->idMesa;
+        return $this->id_mesa;
     }
 
     public function getEstado()
@@ -49,11 +40,11 @@ class Pedido{
 
     public function getTiempoEstimado()
     {
-        return $this->tiempoEstimado;
+        return $this->tiempo_estimado;
     }
 
-    public function getProductos()
+    public function getNombreProductos()
     {
-        return $this->productos;
+        return $this->nombre_productos;
     }
 }

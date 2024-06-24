@@ -4,21 +4,16 @@ namespace App\Models;
 //use Illuminate\Database\Eloquent\Model;
 
 class Producto {
-    public $id;
     public $nombre;
     public $categoria;
+    private $sector;
     public $precio;
 
-    public function __construct($id, $nombre, $categoria, $precio) {
-        $this->id = $id;
+    public function __construct($nombre, $categoria, $sector, $precio) {
         $this->nombre = $nombre;
         $this->categoria = $categoria;
+        $this->sector = $sector;
         $this->precio = $precio;
-    }
-
-    public function getId()
-    {
-        return $this->id;
     }
 
     public function getNombre()
@@ -29,6 +24,11 @@ class Producto {
     public function getCategoria()
     {
         return $this->categoria;
+    }
+
+    public function getSector()
+    {
+        return $this->sector;
     }
 
     public function getPrecio()
