@@ -20,7 +20,7 @@ CREATE TABLE usuarios(
 CREATE TABLE pedidos(
 	id VARCHAR(10),
     nombre_cliente VARCHAR(50) NOT NULL,
-	id_mesa INT NOT NULL,
+	id_mesa VARCHAR(50),
     estado ENUM('en preparacion', 'listo para servir', 'en espera'),
     tiempo_estimado INT,
 	nombre_productos VARCHAR(255) NOT NULL

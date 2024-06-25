@@ -15,8 +15,23 @@ class UsuarioService {
         $this->db = Database::getInstance();
     }
 
+    public function loginUsuario($email, $clave)
+    {
+        $sql = "SELECT * FROM usuarios WHERE email = :email AND estado = 'activo'";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($usuario && $clave === $usuario['clave']) {
+            return $usuario;
+        } else {
+            return null;
+        }
+    }
+
     public function crearUsuario($nombre, $email, $clave, $rol, $tiempo_estimado, $fecha_ingreso, $estado) {
-        $sql = "INSERT INTO pedidos (nombre, email, clave, rol, tiempo_estimado, fecha_ingreso, estado) VALUES (:nombre, :email, :clave, :rol, :tiempo_estimado, :fecha_ingreso, :estado)";
+        $sql = "INSERT INTO usuarios (nombre, email, clave, rol, tiempo_estimado, fecha_ingreso, estado) VALUES (:nombre, :email, :clave, :rol, :tiempo_estimado, :fecha_ingreso, :estado)";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':nombre', $nombre);
         $stmt->bindParam(':email', $email);
