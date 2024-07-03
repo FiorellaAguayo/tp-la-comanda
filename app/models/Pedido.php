@@ -7,15 +7,17 @@ class Pedido{
     public $id_mesa;
     public $estado;
     public $tiempo_estimado;
-    public $nombre_productos; // Array de productos en el pedido
+    public $producto;
+    public $sector;
 
-    public function __construct($id, $nombre_cliente, $id_mesa, $estado, $tiempo_estimado, $nombre_productos) {
+    public function __construct($id, $nombre_cliente, $id_mesa, $estado, $tiempo_estimado, $producto, $sector) {
         $this->id = $id;
         $this->nombre_cliente = $nombre_cliente;
         $this->id_mesa = $id_mesa;
         $this->estado = $estado;
         $this->tiempo_estimado = $tiempo_estimado;
-        $this->nombre_productos = $nombre_productos;
+        $this->producto = $producto;
+        $this->sector = $sector;
     }
 
     public function getId()
@@ -43,8 +45,13 @@ class Pedido{
         return $this->tiempo_estimado;
     }
 
-    public function getNombreProductos()
+    public function getProducto()
     {
-        return $this->nombre_productos;
+        return $this->producto;
+    }
+
+    public function getSector()
+    {
+        return $this->sector;
     }
 }

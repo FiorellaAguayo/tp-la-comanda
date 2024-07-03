@@ -28,12 +28,12 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Psr7\Response as ResponseClass;
 
-// LOGIN
+// LOGIN DE USUARIOS (devuelve token)
 $app->group('/auth', function (RouteCollectorProxy $group) {
     $group->post('/login', LoginController::class . ':login');
 });
 
-// USUARIOS
+// MANEJO DE USUARIOS (agrega, modifica, elimina, lista)
 $app->group('/usuarios', function (RouteCollectorProxy $group) {
     $group->post('/agregarUsuario', UsuarioController::class . ':agregarUsuario')->add(AuthUsuarios::class . ':validarCampos')->add(new AuthMiddleware('socio'));
     $group->post('/modificarUsuario', UsuarioController::class . ':modificarUsuario')->add(new AuthMiddleware('socio'));
@@ -41,7 +41,7 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) {
     $group->get('/listarUsuarios', UsuarioController::class . ':listarUsuarios')->add(new AuthMiddleware('socio'));;
 })->add(new Logger());
 
-// PRODUCTOS
+// MANEJO DE PRODUCTOS (agrega, modifica, elimina, lista)
 $app->group('/productos', function (RouteCollectorProxy $group) {
     $group->post('/agregarProducto', ProductoController::class . ':agregarProducto')->add(AuthProductos::class . ':validarCampos')->add(new AuthMiddleware('socio'));
     $group->post('/modificarProducto', ProductoController::class . ':modificarProducto')->add(new AuthMiddleware('socio'));
@@ -49,7 +49,7 @@ $app->group('/productos', function (RouteCollectorProxy $group) {
     $group->get('/listarProductos', ProductoController::class . ':listarProductos')->add(new AuthMiddleware('socio'));
 })->add(new Logger());
 
-// MESAS
+// MANEJO DE MESAS (agrega, modifica, elimina, lista)
 $app->group('/mesas', function (RouteCollectorProxy $group) {
     $group->post('/agregarMesa', MesaController::class . ':agregarMesa')->add(AuthMesas::class . ':validarCampos')->add(new AuthMiddleware('socio'));
     $group->post('/modificarMesa', MesaController::class . ':modificarMesa')->add(new AuthMiddleware('socio'));
@@ -57,13 +57,13 @@ $app->group('/mesas', function (RouteCollectorProxy $group) {
     $group->get('/listarMesas', MesaController::class . ':listarMesas')->add(new AuthMiddleware('socio'));
 });
 
-// PEDIDOS
+// MANEJO DE PEDIDOS (agrega, modifica, elimina, lista)
 $app->group('/pedidos', function (RouteCollectorProxy $group) {
     $group->post('/agregarPedido', PedidoController::class . ':agregarPedido')->add(AuthPedidos::class . ':validarCampos')->add(new AuthMiddleware(['socio', 'mozo']));
-    $group->post('/modificarPedido', PedidoController::class . ':modificarPedido')->add(new AuthMiddleware('socio'));
+    $group->post('/modificarPedido', PedidoController::class . ':modificarPedido')->add(new AuthMiddleware(['socio', 'bartender', 'cervecero', 'cocinero']));
     $group->post('/eliminarPedido', PedidoController::class . ':eliminarPedido')->add(new AuthMiddleware('socio'));
-    $group->get('/listarPedidos', PedidoController::class . ':listarPedidos')->add(new AuthMiddleware('socio'));
-});
+    $group->get('/listarPedidos', PedidoController::class . ':listarPedidos')->add(new AuthMiddleware(['socio', 'bartender', 'cervecero', 'cocinero']));
+})->add(new Logger());
 
 // LISTADO DE PENDIENTES
 $app->group('/pendientes', function (RouteCollectorProxy $group) {

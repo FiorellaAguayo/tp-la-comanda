@@ -11,8 +11,8 @@ class AuthPedidos
     {
         $params = $request->getParsedBody();
 
-        if ((isset($params['nombre_cliente'], $params['id_mesa'], $params['estado'], $params['tiempo_estimado'], $params['nombre_productos'])) &&
-        !empty($params['nombre_cliente']) && !empty($params['id_mesa']) && !empty($params['estado']) && !empty($params['tiempo_estimado']) && !empty($params['nombre_productos'])) {
+        if ((isset($params['nombre_cliente'], $params['id_mesa'], $params['estado'], $params['tiempo_estimado'], $params['producto'], $params['sector'])) &&
+        !empty($params['nombre_cliente']) && !empty($params['id_mesa']) && !empty($params['estado']) && !empty($params['tiempo_estimado']) && !empty($params['producto']) && !empty($params['sector'])) {
             $response = $requestHandler->handle($request);
         } else {
             $response = new ResponseClass();

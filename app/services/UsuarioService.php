@@ -30,20 +30,21 @@ class UsuarioService {
         }
     }
 
-    public function crearUsuario($nombre, $email, $clave, $rol, $tiempo_estimado, $fecha_ingreso, $estado) {
-        $sql = "INSERT INTO usuarios (nombre, email, clave, rol, tiempo_estimado, fecha_ingreso, estado) VALUES (:nombre, :email, :clave, :rol, :tiempo_estimado, :fecha_ingreso, :estado)";
+    public function crearUsuario($nombre, $email, $clave, $rol, $sector, $tiempo_estimado, $fecha_ingreso, $estado) {
+        $sql = "INSERT INTO usuarios (nombre, email, clave, rol, sector, tiempo_estimado, fecha_ingreso, estado) VALUES (:nombre, :email, :clave, :rol, :sector, :tiempo_estimado, :fecha_ingreso, :estado)";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':nombre', $nombre);
         $stmt->bindParam(':email', $email);
         $stmt->bindParam(':clave', $clave);
         $stmt->bindParam(':rol', $rol);
+        $stmt->bindParam(':sector', $sector);
         $stmt->bindParam(':tiempo_estimado', $tiempo_estimado);
         $stmt->bindParam(':fecha_ingreso', $fecha_ingreso);
         $stmt->bindParam(':estado', $estado);
         $stmt->execute();
         $id_usuario = $this->db->lastInsertId();
 
-        return new Usuario($id_usuario, $nombre, $email, $clave, $rol, $tiempo_estimado, $fecha_ingreso, $estado);
+        return new Usuario($id_usuario, $nombre, $email, $clave, $rol, $sector, $tiempo_estimado, $fecha_ingreso, $estado);
     }
 
     public function obtenerUsuarioPorEmail($email) {
@@ -54,7 +55,7 @@ class UsuarioService {
             $stmt->execute();
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($usuario) {
-                return new Usuario($usuario['id'], $usuario['nombre'], $usuario['email'], $usuario['clave'], $usuario['rol'], $usuario['tiempo_estimado'], $usuario['fecha_ingreso'], $usuario['estado']);
+                return new Usuario($usuario['id'], $usuario['nombre'], $usuario['email'], $usuario['clave'], $usuario['rol'], $usuario['sector'], $usuario['tiempo_estimado'], $usuario['fecha_ingreso'], $usuario['estado']);
             }
             return null;
         } catch (PDOException $e) {
@@ -70,7 +71,7 @@ class UsuarioService {
             $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
             $listaRetorno = [];
             foreach ($usuarios as $usuario) {
-                $usuarioInstance = new Usuario($usuario['id'], $usuario['nombre'], $usuario['email'], $usuario['clave'], $usuario['rol'], $usuario['tiempo_estimado'], $usuario['fecha_ingreso'], $usuario['estado']);
+                $usuarioInstance = new Usuario($usuario['id'], $usuario['nombre'], $usuario['email'], $usuario['clave'], $usuario['rol'], $usuario['sector'], $usuario['tiempo_estimado'], $usuario['fecha_ingreso'], $usuario['estado']);
                 array_push($listaRetorno, $usuarioInstance);
             }
             return $listaRetorno;
@@ -86,6 +87,7 @@ class UsuarioService {
         if (!is_null($email)) $fields[] = "email = :email";
         if (!is_null($clave)) $fields[] = "clave = :clave";
         if (!is_null($rol)) $fields[] = "rol = :rol";
+        if (!is_null($sector)) $fields[] = "sector = :sector";
         if (!is_null($tiempo_estimado)) $fields[] = "tiempo_estimado = :tiempo_estimado";
         if (!is_null($fecha_ingreso)) $fields[] = "fecha_ingreso = :fecha_ingreso";
         if (!is_null($estado)) $fields[] = "estado = :estado";
@@ -98,12 +100,13 @@ class UsuarioService {
         if (!is_null($email)) $stmt->bindParam(':email', $email);
         if (!is_null($clave)) $stmt->bindParam(':clave', $clave);
         if (!is_null($rol)) $stmt->bindParam(':rol', $rol);
+        if (!is_null($sector)) $stmt->bindParam(':sector', $sector);
         if (!is_null($tiempo_estimado)) $stmt->bindParam(':tiempo_estimado', $tiempo_estimado);
         if (!is_null($fecha_ingreso)) $stmt->bindParam(':fecha_ingreso', $fecha_ingreso);
         if (!is_null($estado)) $stmt->bindParam(':estado', $estado);
         $stmt->execute();
 
-        return new Usuario($id, $nombre, $email, $clave, $rol, $tiempo_estimado, $fecha_ingreso, $estado);
+        return new Usuario($id, $nombre, $email, $clave, $rol, $sector, $tiempo_estimado, $fecha_ingreso, $estado);
     }
 
     public function eliminarUsuario($id) {
@@ -111,5 +114,19 @@ class UsuarioService {
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
+    }
+
+    public function obtenerSectorPorEmail($email) {
+        try {
+            $sql = "SELECT sector FROM usuarios WHERE email = :email";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':email', $email);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return $result['sector'] ?? null;
+        } catch(PDOException $e) {
+            throw new PDOException($e->getMessage());
+        }
     }
 }

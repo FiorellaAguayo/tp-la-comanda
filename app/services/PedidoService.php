@@ -22,30 +22,31 @@ class PedidoService {
         return $id;
     }
 
-    public function crearPedido($nombre_cliente, $id_mesa, $estado, $tiempo_estimado, $nombre_productos) {
-        $id = $this->generarIdAleatorio();
-        $sql = "INSERT INTO pedidos (id, nombre_cliente, id_mesa, estado, tiempo_estimado, nombre_productos) VALUES (:id, :nombre_cliente, :id_mesa, :estado, :tiempo_estimado, :nombre_productos)";
+    public function crearPedido($id, $nombre_cliente, $id_mesa, $estado, $tiempo_estimado, $producto, $sector) {
+        $sql = "INSERT INTO pedidos (id, nombre_cliente, id_mesa, estado, tiempo_estimado, producto, sector) VALUES (:id, :nombre_cliente, :id_mesa, :estado, :tiempo_estimado, :producto, :sector)";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $id);
         $stmt->bindParam(':nombre_cliente', $nombre_cliente);
         $stmt->bindParam(':id_mesa', $id_mesa);
         $stmt->bindParam(':estado', $estado);
         $stmt->bindParam(':tiempo_estimado', $tiempo_estimado);
-        $stmt->bindParam(':nombre_productos', $nombre_productos);
+        $stmt->bindParam(':producto', $producto);
+        $stmt->bindParam(':sector', $sector);
         $stmt->execute();
 
-        return new Pedido($id, $nombre_cliente, $id_mesa, $estado, $tiempo_estimado, $nombre_productos);
+        return new Pedido($id, $nombre_cliente, $id_mesa, $estado, $tiempo_estimado, $producto, $sector);
     }
 
-    public function obtenerPedidoPorId($id) {
+    public function obtenerPedidoPorIdYProducto($id, $producto) {
         try {
-            $sql = "SELECT * FROM pedidos WHERE id = :id";
+            $sql = "SELECT * FROM pedidos WHERE id = :id AND producto = :producto";
             $stmt = $this->db->prepare($sql);
             $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':producto', $producto);
             $stmt->execute();
             $pedido = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($pedido) {
-                return new Pedido($pedido['id'], $pedido['nombre_cliente'], $pedido['id_mesa'], $pedido['estado'], $pedido['tiempo_estimado'], $pedido['nombre_productos']);
+                return new Pedido($pedido['id'], $pedido['nombre_cliente'], $pedido['id_mesa'], $pedido['estado'], $pedido['tiempo_estimado'], $pedido['producto'], $pedido['sector']);
             }
             return null;
         } catch (PDOException $e) {
@@ -53,15 +54,21 @@ class PedidoService {
         }
     }
 
-    public function obtenerListaPedidos() {
+    public function obtenerListaPedidosPorRol($rol) {
         try {
             $sql = "SELECT * FROM pedidos";
+            if ($rol == 'bartender') {
+                $sql .= " WHERE producto = 'bebida'";
+            } elseif ($rol == 'cocinero') {
+                $sql .= " WHERE producto = 'comida'";
+            }
+
             $stmt = $this->db->prepare($sql);
             $stmt->execute();
             $pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             $listaRetorno = [];
             foreach ($pedidos as $pedido) {
-                $pedidoInstance = new Pedido($pedido['id'], $pedido['nombre_cliente'], $pedido['id_mesa'], $pedido['estado'], $pedido['tiempo_estimado'], $pedido['nombre_productos']);
+                $pedidoInstance = new Pedido($pedido['id'], $pedido['nombre_cliente'], $pedido['id_mesa'], $pedido['estado'], $pedido['tiempo_estimado'], $pedido['producto'], $pedido['sector']);
                 array_push($listaRetorno, $pedidoInstance);
             }
             return $listaRetorno;
@@ -70,27 +77,31 @@ class PedidoService {
         }
     }
 
-    public function modificarPedido($id, $nombre_cliente, $id_mesa, $estado, $tiempo_estimado, $nombre_productos) {
-        $sql = "UPDATE pedidos SET ";
-        $fields = [];
-        if (!is_null($nombre_cliente)) $fields[] = "nombre_cliente = :nombre_cliente";
-        if (!is_null($id_mesa)) $fields[] = "id_mesa = :id_mesa";
-        if (!is_null($estado)) $fields[] = "estado = :estado";
-        if (!is_null($tiempo_estimado)) $fields[] = "tiempo_estimado = :tiempo_estimado";
-        if (!is_null($nombre_productos)) $fields[] = "nombre_productos = :nombre_productos";
-        $sql .= implode(", ", $fields);
-        $sql .= " WHERE id = :id";
+    public function modificarPedido($id, $producto, $estado, $tiempo_estimado) {
+        try {
+            $sql = "UPDATE pedidos SET estado = :estado, tiempo_estimado = :tiempo_estimado WHERE id = :id AND producto = :producto LIMIT 1";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':estado', $estado);
+            $stmt->bindParam(':tiempo_estimado', $tiempo_estimado);
+            $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':producto', $producto);
+            $stmt->execute();
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':id', $id);
-        if (!is_null($nombre_cliente)) $stmt->bindParam(':nombre_cliente', $nombre_cliente);
-        if (!is_null($id_mesa)) $stmt->bindParam(':id_mesa', $id_mesa);
-        if (!is_null($estado)) $stmt->bindParam(':estado', $estado);
-        if (!is_null($tiempo_estimado)) $stmt->bindParam(':tiempo_estimado', $tiempo_estimado);
-        if (!is_null($nombre_productos)) $stmt->bindParam(':nombre_productos', $nombre_productos);
-        $stmt->execute();
+            $sql = "SELECT * FROM pedidos WHERE id = :id AND producto = :producto LIMIT 1";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':producto', $producto);
+            $stmt->execute();
+            $pedido = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return new Pedido($id, $nombre_cliente, $id_mesa, $estado, $tiempo_estimado, $nombre_productos);
+            if ($pedido) {
+                return new Pedido($pedido['id'], $pedido['nombre_cliente'], $pedido['id_mesa'], $pedido['estado'], $pedido['tiempo_estimado'], $pedido['producto'], $pedido['sector']);
+            }
+
+            return null;
+        } catch (PDOException $e) {
+            throw new PDOException($e->getMessage());
+        }
     }
 
     public function eliminarPedido($id) {
@@ -99,4 +110,28 @@ class PedidoService {
         $stmt->bindParam(':id', $id);
         $stmt->execute();
     }
+
+  
+    public function obtenerListaPedidosPorSector($sector) {
+        try {
+            $sql = "SELECT p.* FROM pedidos p
+                    WHERE p.sector = :sector";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':sector', $sector);
+            $stmt->execute();
+            $pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $listaRetorno = [];
+            foreach ($pedidos as $pedido) {
+                $pedidoInstance = new Pedido($pedido['id'], $pedido['nombre_cliente'], $pedido['id_mesa'], $pedido['estado'], $pedido['tiempo_estimado'], $pedido['producto'], $pedido['sector']);
+                array_push($listaRetorno, $pedidoInstance);
+            }
+
+            return $listaRetorno;
+        } catch(PDOException $e) {
+            throw new PDOException($e->getMessage());
+        }
+    }
+
 }

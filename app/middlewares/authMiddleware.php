@@ -29,8 +29,15 @@ class AuthMiddleware
         try {
             $userData = TokenService::obtenerData($token);
             $rolUsuario = $userData->rol ?? null;
+            $emailUsuario = $userData->email ?? null;
+
+            // Agregar logs para verificar los datos del token
+            error_log("Rol Usuario: " . $rolUsuario);
+            error_log("Email Usuario: " . $emailUsuario);
 
             if (in_array($rolUsuario, $this->rolesPermitidos)) {
+                $request = $request->withAttribute('emailUsuario', $emailUsuario);
+                $request = $request->withAttribute('rolUsuario', $rolUsuario);
                 return $handler->handle($request);
             } else {
                 return $this->errorResponse($response, "Acceso denegado: no tiene permisos de '" . implode("' o '", $this->rolesPermitidos) . "'", 403);

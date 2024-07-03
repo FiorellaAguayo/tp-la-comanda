@@ -12,6 +12,7 @@ CREATE TABLE usuarios(
     email VARCHAR(100) NOT NULL UNIQUE,
     clave VARCHAR(50) NOT NULL,
     rol ENUM('mozo', 'bartender', 'socio', 'cervecero', 'cocinero') NOT NULL,
+    sector ENUM('cocina', 'barra de choperas', 'barra de tragos y vinos', 'candy bar') NOT NULL,
     tiempo_estimado INT NOT NULL,
     fecha_ingreso DATE NOT NULL,
 	estado ENUM('activo', 'suspendido') NOT NULL DEFAULT 'activo'
@@ -23,7 +24,8 @@ CREATE TABLE pedidos(
 	id_mesa VARCHAR(50),
     estado ENUM('en preparacion', 'listo para servir', 'en espera'),
     tiempo_estimado INT,
-	nombre_productos VARCHAR(255) NOT NULL
+	producto VARCHAR(255) NOT NULL,
+    sector VARCHAR(100) NOT NULL,
 );
 
 CREATE TABLE clientes(

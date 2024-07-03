@@ -23,6 +23,7 @@ class UsuarioController {
                     'email' => $usuario->getEmail(),
                     'clave' => $usuario->getClave(),
                     'rol' => $usuario->getRol(),
+                    'sector' => $usuario->getSector(),
                     'tiempo_estimado' => $usuario->getTiempoEstimado(),
                     'fecha_ingreso' => $usuario->getFechaIngreso(),
                     'estado' => $usuario->getEstado(),
@@ -45,18 +46,19 @@ class UsuarioController {
             $email = $data['email'] ?? null;
             $clave = $data['clave'] ?? null;
             $rol = $data['rol'] ?? null;
+            $sector = $data['sector'] ?? null;
             $tiempo_estimado = $data['tiempo_estimado'] ?? null;
             $fecha_ingreso = $data['fecha_ingreso'] ?? null;
             $estado = $data['estado'] ?? null;
             
-            if ($nombre !== null && $email !== null && $clave !== null && $rol !== null && $tiempo_estimado !== null && $fecha_ingreso !== null && $estado !== null) {
+            if ($nombre !== null && $email !== null && $clave !== null && $rol !== null && $sector !== null && $tiempo_estimado !== null && $fecha_ingreso !== null && $estado !== null) {
                 $usuarioExistente = $this->usuarioService->obtenerUsuarioPorEmail($email);
 
                 if ($usuarioExistente) {
                     $payload = json_encode(array("message" => "El usuario ya existe"));
 
                 } else {
-                    $usuario = $this->usuarioService->crearUsuario($nombre, $email, $clave, $rol, $tiempo_estimado, $fecha_ingreso, $estado);
+                    $usuario = $this->usuarioService->crearUsuario($nombre, $email, $clave, $rol, $sector, $tiempo_estimado, $fecha_ingreso, $estado);
                     $payload = json_encode([
                         'success' => true,
                         'message' => 'Usuario creado exitosamente',
@@ -66,6 +68,7 @@ class UsuarioController {
                             'email' => $usuario->getEmail(),
                             'clave' => $usuario->getClave(),
                             'rol' => $usuario->getRol(),
+                            'sector' => $usuario->getSector(),
                             'tiempo_estimado' => $usuario->getTiempoEstimado(),
                             'fecha_ingreso' => $usuario->getFechaIngreso(),
                             'estado' => $usuario->getEstado(),
@@ -100,6 +103,7 @@ class UsuarioController {
                     $nombre = $data['nombre'] ?? $usuarioExistente->getNombre();
                     $clave = $data['clave'] ?? $usuarioExistente->getClave();
                     $rol = $data['rol'] ?? $usuarioExistente->getRol();
+                    $sector = $data['sector'] ?? $usuarioExistente->getSector();
                     $tiempo_estimado = $data['tiempo_estimado'] ?? $usuarioExistente->getTiempoEstimado();
                     $fecha_ingreso = $data['fecha_ingreso'] ?? $usuarioExistente->getFechaIngreso();
                     $estado = $data['estado'] ?? $usuarioExistente->getEstado();
@@ -110,6 +114,7 @@ class UsuarioController {
                         $email,
                         $clave,
                         $rol,
+                        $sector,
                         $tiempo_estimado,
                         $fecha_ingreso,
                         $estado
@@ -123,6 +128,7 @@ class UsuarioController {
                             'email' => $usuarioModificado->getEmail(),
                             'clave' => $usuarioModificado->getClave(),
                             'rol' => $usuarioModificado->getRol(),
+                            'sector' => $usuarioModificado->getSector(),
                             'tiempo_estimado' => $usuarioModificado->getTiempoEstimado(),
                             'fecha_ingreso' => $usuarioModificado->getFechaIngreso(),
                             'estado' => $usuarioModificado->getEstado(),

@@ -11,10 +11,9 @@ class AuthUsuarios
     {
         $params = $request->getParsedBody();
 
-        if ((isset($params['nombre'], $params['email'], $params['clave'], $params['rol'], $params['tiempo_estimado'], $params['fecha_ingreso'], $params['estado'])) &&
-            !empty($params['nombre']) && !empty($params['email']) && !empty($params['clave']) && !empty($params['rol']) && !empty($params['tiempo_estimado']) && !empty($params['fecha_ingreso']) && !empty($params['estado'])) {
-            
-                $response = $requestHandler->handle($request);
+        if ((isset($params['nombre'], $params['email'], $params['clave'], $params['rol'], $params['tiempo_estimado'], $params['fecha_ingreso'], $params['estado'], $params['sector'])) &&
+            !empty($params['nombre']) && !empty($params['email']) && !empty($params['clave']) && !empty($params['rol']) && !empty($params['tiempo_estimado']) && !empty($params['fecha_ingreso']) && !empty($params['estado']) && !empty($params['sector'])) {
+            $response = $requestHandler->handle($request);
         } else {
             $response = new ResponseClass();
             $response->getBody()->write(json_encode(array("error" => "Parametros incorrectos")));
